@@ -1,0 +1,4 @@
+1)install anaconda
+2)open anaconda navigator
+3)in base folder go to uninstalled and install
+	opencv and tensorflow
