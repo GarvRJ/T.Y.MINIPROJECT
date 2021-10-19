@@ -102,7 +102,6 @@ if __name__ == "__main__":
         '''for (x, y, w, h) in bikes:
             cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 255), 2)
             bs += 1
-
         for i in range(len(boxes)):
             # Class 1 represents human
             if classes[i] == 1 and scores[i] > threshold:

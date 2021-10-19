@@ -2,6 +2,22 @@ import collections
 import pafy
 import cv2
 import numpy as np
+import pyrebase
+
+config = {
+    "apiKey": "AIzaSyBwmqCQqqv3bSH9GaUxnkDGhJGMkBFf1V4",
+    "authDomain": "sem5project-2c0a3.firebaseapp.com",
+    "projectId": "sem5project-2c0a3",
+    "databaseURL": "https://sem5project-2c0a3-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    "storageBucket": "sem5project-2c0a3.appspot.com",
+    "messagingSenderId": "510686384573",
+    "appId": "1:510686384573:web:2d81e1dde49960aff4c2d4",
+    "measurementId": "G-W0QW05V8FN"
+}
+firebase = pyrebase.initialize_app(config)
+database = firebase.database()
+data = {"cars": 0, "bikes": 0}
+database.push(data)
 
 webcam = 0
 cctv = 'rtsp://192.168.0.169/live/ch00_1'
@@ -98,6 +114,8 @@ while True:
     if count % 35 == 0:
         # print(str(max(cs)))
         print('UPDATING DATA ' + str(int(count / 35)) + '\n CARS:\t' + str(max(cs)) + '\n BIKES:\t' + str(max(bs)))
+        # countdb = {"cars": max(cs), "bikes": max(bs)}
+        # database.update(countdb)
 
     cv2.imshow('YOLO', img)
     key = cv2.waitKey(1)
