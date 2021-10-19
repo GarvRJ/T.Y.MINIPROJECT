@@ -122,8 +122,8 @@ while True:
     cv2.imshow('YOLO', img)
     key = cv2.waitKey(1)
     if key & 0xFF == ord('q'):
-        database.update({location:{"cars": 0, "bikes": 0}})
         break
 
+database.update({location:"Offline"})
 cap.release()
 cv2.destroyAllWindows()
