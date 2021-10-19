@@ -71,7 +71,7 @@ if __name__ == "__main__":
     url = "https://www.youtube.com/watch?v=1EiC9bvVGnk"
     video = pafy.new(url)
     best = video.getbest(preftype="mp4")
-    cap = cv2.VideoCapture()
+    cap = cv2.VideoCapture('pump.mp4')
     car_cascade = cv2.CascadeClassifier('car.xml')
     #bike_cascade = cv2.CascadeClassifier('two_wheeler.xml')
 
@@ -116,7 +116,7 @@ if __name__ == "__main__":
         cv2.putText(img, 'Car count : ' + k, (0, 200), font, 2, (0, 0, 0), 5, cv2.LINE_AA)
         #total_ped = str(total_ped)
         #cv2.putText(img, 'Bike count : ' + l, (0, 130), font, 2, (0, 0, 0), 5, cv2.LINE_AA)
-        cv2.imshow("preview", img)
+        cv2.imshow("HAAR CASCADE", img)
         key = cv2.waitKey(1)
         if key & 0xFF == ord('q'):
             break
