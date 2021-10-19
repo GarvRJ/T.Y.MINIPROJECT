@@ -16,7 +16,9 @@ config = {
 }
 firebase = pyrebase.initialize_app(config)
 database = firebase.database()
-location="Sion"
+location = "Sion"
+database.update({location: "Online"})
+
 
 webcam = 0
 cctv = 'rtsp://192.168.0.169/live/ch00_1'
@@ -57,7 +59,7 @@ net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 # net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 
-def findObjects(outputs, img):
+def findObjects(_outputs, _img):
     hT, wT, cT = img.shape
     bbox = []
     classIds = []
@@ -113,9 +115,9 @@ while True:
     if count % 35 == 0:
         # print(str(max(cs)))
         print('UPDATING DATA ' + str(int(count / 35)) + '\n CARS:\t' + str(max(cs)) + '\n BIKES:\t' + str(max(bs)))
-        countdb = {"cars": max(cs), "bikes": max(bs)}
+        countUp = {"cars": max(cs), "bikes": max(bs)}
         upload = {
-            location:countdb
+            location: countUp
         }
         database.update(upload)
 
@@ -124,6 +126,6 @@ while True:
     if key & 0xFF == ord('q'):
         break
 
-database.update({location:"Offline"})
+database.update({location: "Offline"})
 cap.release()
 cv2.destroyAllWindows()
