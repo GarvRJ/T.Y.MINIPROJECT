@@ -1,9 +1,26 @@
 import collections
-import pafy
+from _datetime import datetime
+
 import cv2
 import numpy as np
+import firebase_admin
+from firebase_admin import credentials, firestore
 import pyrebase
 
+location = "Sion East"
+loc = {
+    "Latitude": "19.044197669339596",
+    "Longitude": "72.86488164388184"
+}
+services = ["Petrol", "Speed", "Air Filling", "Diesel", "CNG"]
+cred = credentials.Certificate('./ServiceAccount.json')
+default_app = firebase_admin.initialize_app(cred)
+db = firestore.client()
+doc_ref = db.collection(u'Pumps').document(u'{}'.format(location))
+doc_ref.set({
+    u'Services': services,
+    u'Location': loc
+})
 config = {
     "apiKey": "AIzaSyDef18Xg_Ri5Kvnc8VYabur4yVMdVvOAsw",
     "authDomain": "miniproject-442bd.firebaseapp.com",
@@ -16,23 +33,17 @@ config = {
 }
 firebase = pyrebase.initialize_app(config)
 database = firebase.database()
-location = "Sion"
 database.update({location: "Online"})
-
-
+print('{} with {} at {}'.format(location, services, loc))
 webcam = 0
 cctv = 'rtsp://192.168.0.169/live/ch00_1'
-url = "https://www.youtube.com/watch?v=1EiC9bvVGnk"
-video = pafy.new(url)
-best = video.getbest(preftype="mp4")
-stream = best.url
 n = 'night.mp4'
 p = 'pump.mp4'
 sd = 'sample_drive.mp4'
 cap = cv2.VideoCapture(sd)
 
 # 1 min -> maxlen 140
-Services = ["petrol", "Speed", "Air Filling", "Diesel", "CNG"]
+
 cs = collections.deque(maxlen=35)
 bs = collections.deque(maxlen=35)
 cs.append(0)
@@ -52,11 +63,12 @@ with open(classesFile, 'rt') as f:
 modelConfiguration = 'yolov3-320.cfg'
 modelWeights = 'yolov3-320.weights'
 
+
 net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelWeights)
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-# net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-# net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+# net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+# net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 
 def findObjects(_outputs, _img):
@@ -81,7 +93,7 @@ def findObjects(_outputs, _img):
     cars = 0
     bikes = 0
     for i in indices:
-        i = i[0]
+        #i = i[0]
         box = bbox[i]
         if classNames[classIds[0]].upper() == 'CAR':
             cars += 1
@@ -104,7 +116,7 @@ while True:
 
     # Output layers name and index:
     layerNames = net.getLayerNames()
-    outputNames = [layerNames[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    outputNames = [layerNames[i - 1] for i in net.getUnconnectedOutLayers()]
     # print(outputNames)
     outputs = net.forward(outputNames)
     # print(outputs[0].shape) #tiny:(192, 85)
@@ -120,6 +132,16 @@ while True:
             location: countUp
         }
         database.update(upload)
+        now = datetime.now()
+        doc_upd = db.collection(u'Updates').document(u'{}'.format(now))
+        doc_upd.set(
+            {
+                u'{}'.format(location): {
+                    u'Bikes': max(bs),
+                    u'Cars': max(cs)
+                }
+            }
+        )
 
     cv2.imshow('YOLO', img)
     key = cv2.waitKey(1)
