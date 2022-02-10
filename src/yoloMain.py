@@ -4,10 +4,12 @@ from _datetime import datetime
 import cv2
 import numpy as np
 import firebase_admin
+import requests
 from firebase_admin import credentials, firestore
 import pyrebase
 
-location = "Sion East"
+station = "Station B"
+station_id = "5"
 loc = {
     "Latitude": "19.044197669339596",
     "Longitude": "72.86488164388184"
@@ -16,7 +18,7 @@ services = ["Petrol", "Speed", "Air Filling", "Diesel", "CNG"]
 cred = credentials.Certificate('./ServiceAccount.json')
 default_app = firebase_admin.initialize_app(cred)
 db = firestore.client()
-doc_ref = db.collection(u'Pumps').document(u'{}'.format(location))
+doc_ref = db.collection(u'Pumps').document(u'{}'.format(station))
 doc_ref.set({
     u'Services': services,
     u'Location': loc
@@ -33,8 +35,8 @@ config = {
 }
 firebase = pyrebase.initialize_app(config)
 database = firebase.database()
-database.update({location: "Online"})
-print('{} with {} at {}'.format(location, services, loc))
+database.update({station: "Online"})
+print('{} with {} at {}'.format(station, services, loc))
 webcam = 0
 cctv = 'rtsp://192.168.0.169/live/ch00_1'
 n = 'night.mp4'
@@ -65,10 +67,10 @@ modelWeights = 'yolov3-320.weights'
 
 
 net = cv2.dnn.readNetFromDarknet(modelConfiguration, modelWeights)
-# net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-# net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+# net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+# net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 
 def findObjects(_outputs, _img):
@@ -108,6 +110,13 @@ def findObjects(_outputs, _img):
     bs.append(bikes)
 
 
+def log(sid, bks, crs):
+    url = "http://pawnest.com/webservice/log.php"
+    dt = {'station_id': sid, 'bikes': bks, 'cars': crs}
+    x = requests.post(url, data=dt)
+    print(x.text)
+
+
 while True:
     success, img = cap.read()
 
@@ -129,25 +138,26 @@ while True:
         print('UPDATING DATA ' + str(int(count / 35)) + '\n CARS:\t' + str(max(cs)) + '\n BIKES:\t' + str(max(bs)))
         countUp = {"cars": max(cs), "bikes": max(bs)}
         upload = {
-            location: countUp
+            station: countUp
         }
         database.update(upload)
         now = datetime.now()
         doc_upd = db.collection(u'Updates').document(u'{}'.format(now))
         doc_upd.set(
             {
-                u'{}'.format(location): {
+                u'{}'.format(station): {
                     u'Bikes': max(bs),
                     u'Cars': max(cs)
                 }
             }
         )
+        log(station_id, max(bs), max(cs))
 
     cv2.imshow('YOLO', img)
     key = cv2.waitKey(1)
     if key & 0xFF == ord('q'):
         break
 
-database.update({location: "Offline"})
+database.update({station: "Offline"})
 cap.release()
 cv2.destroyAllWindows()
